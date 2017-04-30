@@ -10,6 +10,9 @@ import (
 
 	_ "github.com/lib/pq"
 	"github.com/gorilla/mux"
+	"flag"
+	"os"
+	"strconv"
 )
 
 var db *sql.DB
@@ -51,12 +54,37 @@ type Game struct {
 }
 
 func main() {
+	ip := flag.String("ip", defaultIp(), "Application IP")
+	port := flag.Int("port", defaultPort(), "Application port")
 	router := mux.NewRouter()
 	router.HandleFunc("/games", games).Methods("GET")
 	router.HandleFunc("/games/{id}", game).Methods("GET")
 	router.PathPrefix("/covers/").Handler(http.StripPrefix("/covers/",
 		http.FileServer(http.Dir("./covers/"))))
-	log.Fatal(http.ListenAndServe(":8080", router))
+
+	p := fmt.Sprintf("%s:%d", *ip, *port)
+	fmt.Printf("Listening on %s...", p)
+	log.Fatal(http.ListenAndServe(p, router))
+}
+
+func defaultIp() string {
+	ip := os.Getenv("OPENSHIFT_GO_IP")
+	if ip == "" {
+		return "localhost"
+	}
+	return ip
+}
+
+func defaultPort() int {
+	port := os.Getenv("OPENSHIFT_GO_PORT")
+	if port == "" {
+		return 8080
+	}
+	i, err := strconv.Atoi(port)
+	if err != nil {
+		panic(err)
+	}
+	return i
 }
 
 func games(w http.ResponseWriter, req *http.Request) {
