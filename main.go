@@ -53,7 +53,6 @@ type Game struct {
 func main() {
 	router := mux.NewRouter()
 	router.HandleFunc("/games", games).Methods("GET")
-	//router.HandleFunc("/covers/{id}", covers).Methods("GET")
 	router.PathPrefix("/covers/").Handler(http.StripPrefix("/covers/",
 		http.FileServer(http.Dir("./covers/"))))
 	log.Fatal(http.ListenAndServe(":8080", router))
@@ -94,11 +93,4 @@ func games(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	json.NewEncoder(w).Encode(Games{Games:games})
-}
-
-func covers(w http.ResponseWriter, req *http.Request) {
-	params := mux.Vars(req)
-	id := params["id"]
-	fmt.Println(id)
-	http.FileServer(http.Dir("/media/andoni/riker/psp/" + id + ".jpeg"))
 }
